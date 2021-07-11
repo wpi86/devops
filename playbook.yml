@@ -1,0 +1,45 @@
+---
+#Installing Docker and deploying my web server on Ubuntu 20.04
+
+- hosts: all
+  become: yes
+ 
+  tasks:
+  
+#    - name: Install aptitude
+#      apt: name=aptitude state=latest update_cache=yes force_apt_get=yes
+      
+    - name: Install Docker adds
+      apt: name={{ item }} state=latest update_cache=yes
+      loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common', 'python3-pip' ]
+   
+    - name: Add Docker gpg
+      apt_key: 
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    
+    - name: Add Docker rep
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+    
+    - name: Install Docker module for Python
+      pip:
+        name: docker
+         
+    - name: Install Docker
+      apt: update_cache=yes name=docker-ce state=latest
+   
+    - name: Pull docker image
+      docker_image:
+        name: wpi86/devops:webserv
+        source: pull
+     
+    - name: Create container
+      docker_container:
+        name: webserv
+        image: wpi86/devops:webserv
+        state: started
+        restart_policy: always
+        ports:
+        - "443:1443"
